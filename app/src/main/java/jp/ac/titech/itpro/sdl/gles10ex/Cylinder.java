@@ -18,39 +18,24 @@ public class Cylinder implements SimpleRenderer.Obj {
         NUM_VERTICES = n;
         float delta = (float)(Math.PI / 180) * (360f / NUM_VERTICES);
 
-        float[] vTop = new float[(NUM_VERTICES - 2)  * 3 * 3];
-        float[] vBottom = new float[(NUM_VERTICES - 2)  * 3 * 3];
-        float[] vSide = new float[NUM_VERTICES * 3 * 4];
+        float[] vTop = new float[NUM_VERTICES * 3];
+        float[] vBottom = new float[NUM_VERTICES * 3];
+        float[] vSide = new float[(NUM_VERTICES + 1) * 2 * 3];
         nVSide = new float[NUM_VERTICES * 3];
-        //上面
-        for(int i = 1,k = 0; i < NUM_VERTICES - 1 ; i++) {
-            vTop[k++] = (float)r;
-            vTop[k++] = 0f;
-            vTop[k++] = 0f;
 
+        //上面
+        for(int i = 0,k = 0; i < NUM_VERTICES; i++) {
             vTop[k++] = (float) (r * Math.cos(delta * i));
             vTop[k++] = (float) (r * Math.sin(delta * i));
-            vTop[k++] = 0f;
-
-            vTop[k++] = (float) (r * Math.cos(delta * (i + 1)));
-            vTop[k++] = (float) (r * Math.sin(delta * (i + 1)));
             vTop[k++] = 0f;
         }
 
         //下面
-         for(int i = 1,k = 0; i < NUM_VERTICES - 1 ; i++) {
-            vBottom[k++] = (float)r;
-            vBottom[k++] = 0f;
-            vBottom[k++] = l;
-
+         for(int i = 0,k = 0; i < NUM_VERTICES; i++) {
             vBottom[k++] = (float) (r * Math.cos(delta * i));
             vBottom[k++] = (float) (r * Math.sin(delta * i));
             vBottom[k++] = l;
-
-            vBottom[k++] = (float) (r * Math.cos(delta * (i + 1)));
-            vBottom[k++] = (float) (r * Math.sin(delta * (i + 1)));
-            vBottom[k++] = l;
-        }
+         }
 
         //側面の法線ベクトル
         for(int i = 0, k = 0; i < NUM_VERTICES; i++) {
@@ -60,37 +45,23 @@ public class Cylinder implements SimpleRenderer.Obj {
         }
 
         //側面
-        int i = 0, k = 0;
-        for(; i < NUM_VERTICES - 1; i++) {
-            vSide[k++] = (float) (r * Math.cos(delta * i));
-            vSide[k++] = (float) (r * Math.sin(delta * i));
-            vSide[k++] = 0f;
-
-            vSide[k++] = (float) (r * Math.cos(delta * i));
-            vSide[k++] = (float) (r * Math.sin(delta * i));
-            vSide[k++] = l;
-
-            vSide[k++] = (float) (r * Math.cos(delta * (i + 1)));
-            vSide[k++] = (float) (r * Math.sin(delta * (i + 1)));
-            vSide[k++] = 0f;
-
-            vSide[k++] = (float) (r * Math.cos(delta * (i + 1)));
-            vSide[k++] = (float) (r * Math.sin(delta * (i + 1)));
-            vSide[k++] = l;
+        for(int i = 0, k = 0; i <= NUM_VERTICES; i++) {
+            if(i != NUM_VERTICES) {
+                vSide[k++] = (float) (r * Math.cos(delta * i));
+                vSide[k++] = (float) (r * Math.sin(delta * i));
+                vSide[k++] = 0f;
+                vSide[k++] = (float) (r * Math.cos(delta * i));
+                vSide[k++] = (float) (r * Math.sin(delta * i));
+                vSide[k++] = l;
+            } else {
+                vSide[k++] = (float)r;
+                vSide[k++] = 0f;
+                vSide[k++] = 0f;
+                vSide[k++] = (float)r;
+                vSide[k++] = 0f;
+                vSide[k++] = l;
+            }
         }
-        vSide[k++] = (float) (r * Math.cos(delta * i));
-        vSide[k++] = (float) (r * Math.sin(delta * i));
-        vSide[k++] = 0f;
-        vSide[k++] = (float) (r * Math.cos(delta * i));
-        vSide[k++] = (float) (r * Math.sin(delta * i));
-        vSide[k++] = l;
-        vSide[k++] = (float)r;
-        vSide[k++] = 0f;
-        vSide[k++] = 0f;
-        vSide[k++] = (float)r;
-        vSide[k++] = 0f;
-        vSide[k++] = l;
-
 
         vTopBuf = ByteBuffer.allocateDirect(vTop.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -107,12 +78,6 @@ public class Cylinder implements SimpleRenderer.Obj {
         vSideBuf.put(vSide);
         vSideBuf.position(0);
 
-        /*nVSideBuf = ByteBuffer.allocateDirect(nVSide.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        nVSideBuf.put(nVSide);
-        nVSideBuf.position(0);
-*/
-
         this.x = x;
         this.y = y;
         this.z = z;
@@ -120,23 +85,21 @@ public class Cylinder implements SimpleRenderer.Obj {
 
     public void draw(GL10 gl) {
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vTopBuf);
+
 
         //上面
-        for(int i = 0; i < (NUM_VERTICES - 2) * 3; i += 3) {
-            gl.glNormal3f(0, 0, -1);
-            gl.glDrawArrays(GL10.GL_TRIANGLES, i, 3);
-        }
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vTopBuf);
+        gl.glNormal3f(0, 0, -1);
+        gl.glDrawArrays(GL10.GL_TRIANGLE_FAN, 0, NUM_VERTICES);
 
         //下面
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vBottomBuf);
-        for(int i = 0; i < (NUM_VERTICES - 2) * 3; i += 3) {
-            gl.glNormal3f(0, 0, 1);
-            gl.glDrawArrays(GL10.GL_TRIANGLES, i, 3);
-        }
+        gl.glNormal3f(0, 0, 1);
+        gl.glDrawArrays(GL10.GL_TRIANGLE_FAN, 0, NUM_VERTICES);
+
         //側面
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vSideBuf);
-        for(int i = 0, k = 0; i < NUM_VERTICES * 4; i += 4) {
+        for(int i = 0, k = 0; i < NUM_VERTICES * 2; i += 2) {
             gl.glNormal3f(nVSide[k++], nVSide[k++] , nVSide[k++]);
             gl.glDrawArrays(GL10.GL_TRIANGLE_STRIP, i, 4);
         }
